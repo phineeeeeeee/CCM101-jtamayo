@@ -3,7 +3,7 @@
 ## 📂 Repository Structure
 
 ```text
-CCM101-jtorres/
+CCM101-jtamayo
 │
 ├── README.md
 │
