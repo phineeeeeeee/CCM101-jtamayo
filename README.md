@@ -1,9 +1,9 @@
-# CCM101-jtamayo
+# cloud-computing-portfolio
 
 ## 📂 Repository Structure
 
 ```text
-CCM101-jtamayo
+cloud-computing-portfolio
 │
 ├── README.md
 │
