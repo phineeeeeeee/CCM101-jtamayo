@@ -1,4 +1,15 @@
-# cloud-computing-portfolio
+# ☁️ Cloud Computing Portfolio
+
+Welcome to my Cloud Computing Portfolio! This repository documents my journey and practical work in:
+
+- Linux System Administration
+- Git & Version Control
+- Containerization (Docker)
+- Container Orchestration (Kubernetes)
+- Cloud Infrastructure & Services
+- Monitoring & Enterprise System Administration
+
+---
 
 ## 📂 Repository Structure
 
