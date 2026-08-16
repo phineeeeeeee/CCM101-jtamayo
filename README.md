@@ -14,7 +14,7 @@ Welcome to my Cloud Computing Portfolio! This repository documents my journey an
 ## 📂 Repository Structure
 
 ```text
-CCM101-jentorres
+CCM101-jtamayo
 │
 ├── README.md
 │
