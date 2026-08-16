@@ -5,7 +5,7 @@ Evaluated AWS, Microsoft Azure, and Google Cloud Platform to recommend cloud sol
 
 ## Linux Server Investigation — KillerCoda
 ### System Information
-- **Operating System**: Ubuntu / Debian (example output)
+- **Operating System**: Ubuntu 24.04.4 LTS
 - **CPU**: 2–4 vCPUs, x86_64 architecture
 - **Memory**: ~2–4 GB RAM
 - **Disk Space**: ~20–40 GB storage
