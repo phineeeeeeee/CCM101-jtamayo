@@ -12,16 +12,6 @@
 | Primary Strength | Breadth of services & maturity | Microsoft ecosystem integration | AI/ML, Kubernetes & global network |
 | Ideal Organizations | All sizes, especially broad needs | Microsoft shops & enterprises | Cloud-native, AI/ML & startups |
 
-## Equivalent Services Reference Table
-
-| Service Category | AWS | Azure | GCP |
-|---|---|---|---|
-| Virtual Machine | Amazon EC2 | Azure Virtual Machines | Google Compute Engine |
-| Object Storage | Amazon S3 | Azure Blob Storage | Google Cloud Storage |
-| Identity Management | IAM | Entra ID (Azure AD) | Cloud IAM |
-| SQL Database | Amazon RDS | Azure SQL Database | Cloud SQL |
-| Kubernetes | Amazon EKS | Azure AKS | Google GKE |
-
 ## Analysis Questions
 
 ### 1. Which cloud provider offers the broadest range of services?
