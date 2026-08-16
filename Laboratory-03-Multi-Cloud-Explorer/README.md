@@ -20,5 +20,6 @@ If this Linux server were migrated to the cloud:
 | **GCP** | Google Compute Engine (GCE) |
 
 All three providers offer Linux-compatible virtual machines with matching CPU/memory/storage configurations.
+<img width="1920" height="1080" alt="README" src="https://github.com/user-attachments/assets/d54854fb-1c85-4a21-86fa-f43e13cd55ee" />
 
 
