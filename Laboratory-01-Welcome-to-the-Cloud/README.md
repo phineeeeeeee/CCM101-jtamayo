@@ -1,4 +1,4 @@
-# 🚀 Laboratory Activity 1 — Welcome to the Cloud
+# Laboratory Activity 1 — Welcome to the Cloud
 
 ## Mission Overview
 This mission serves as the onboarding challenge for new Junior Cloud Infrastructure Engineer Trainees. The goal is to familiarize ourselves with cloud-based Linux environments, navigate the command line, gather system information, and establish a professional GitHub portfolio to document all laboratory work.
@@ -12,14 +12,14 @@ This mission serves as the onboarding challenge for new Junior Cloud Infrastruct
 - Document technical work using Markdown.
 
 ## Activities Performed
-1. ✅ Launched Ubuntu 24.04 playground on KillerCoda.
-2. ✅ Created a new user with sudo privileges and Bash shell.
-3. ✅ Recorded current username, working directory, and hostname.
-4. ✅ Retrieved system details: distribution, kernel, CPU, memory, disk.
-5. ✅ Created standard folder structure for laboratory documentation.
-6. ✅ Wrote system information and personal introduction using Markdown.
-7. ✅ Created GitHub portfolio repository and organized file structure.
-8. ✅ Captured evidence screenshots and prepared final submission.
+1. Launched Ubuntu 24.04 playground on KillerCoda.
+2. Created a new user with sudo privileges and Bash shell.
+3. Recorded current username, working directory, and hostname.
+4. Retrieved system details: distribution, kernel, CPU, memory, disk.
+5. Created standard folder structure for laboratory documentation.
+6. Wrote system information and personal introduction using Markdown.
+7. Created GitHub portfolio repository and organized file structure.
+8. Captured evidence screenshots and prepared final submission.
 
 ## Linux Commands Used
 | Command | Purpose |
