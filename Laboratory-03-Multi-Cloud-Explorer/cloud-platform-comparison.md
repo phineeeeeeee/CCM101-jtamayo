@@ -25,3 +25,13 @@
 
 ### 4. Which cloud platform would you personally choose and why?
 I would choose **GCP** for cloud-native development and AI work due to its superior networking, open-source leadership, and modern developer experience. For general enterprise with Microsoft, Azure is clearer; for maximum service breadth, AWS wins — but GCP balances innovation and simplicity best.
+
+## Equivalent Services Reference Table
+
+| Service Category | AWS | Azure | GCP |
+|---|---|---|---|
+| Virtual Machine | Amazon EC2 | Azure Virtual Machines | Google Compute Engine |
+| Object Storage | Amazon S3 | Azure Blob Storage | Google Cloud Storage |
+| Identity Management | IAM | Entra ID (Azure AD) | Cloud IAM |
+| SQL Database | Amazon RDS | Azure SQL Database | Cloud SQL |
+| Kubernetes | Amazon EKS | Azure AKS | Google GKE |
