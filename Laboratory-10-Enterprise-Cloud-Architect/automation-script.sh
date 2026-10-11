@@ -1,3 +1,4 @@
+``` text
 #!/bin/bash
 
 if mountpoint -q /mnt/backup; then
@@ -14,3 +15,4 @@ docker exec ccm101-mysql sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" wordp
 
 find "$BACKUP_DIR" -name "wordpress_*.sql" -mtime +7 -delete
 echo "$(date +"%Y-%m-%d %H:%M:%S") backup saved to $BACKUP_DIR" >> "$HOME/backup.log"
+```
