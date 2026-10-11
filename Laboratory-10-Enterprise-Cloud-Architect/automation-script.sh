@@ -1,4 +1,4 @@
-``` text
+```text
 #!/bin/bash
 
 if mountpoint -q /mnt/backup; then
