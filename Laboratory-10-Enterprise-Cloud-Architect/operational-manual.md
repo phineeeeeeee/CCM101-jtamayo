@@ -1,4 +1,4 @@
-# CCM101 – Cloud Computing
+# CCM101 Cloud Computing
 
 # Enterprise Cloud Architect Operational Manual
 
@@ -6,186 +6,130 @@
 | --- | --- |
 | Project | Secure Multi-Tier Web Application |
 | Application Stack | WordPress + MySQL |
-| Prepared by | Acerit, Suzette; Apolinar, Cyriel; Castillo, Gammie; Godoy, Rose Ann; Tamayo, Josephine |
+| Prepared by | ACERIT, SUZANNE P., ESTIBAR, JOHN DARYL T., JAVONILLO, KYRA NICOLE V., SALCEDO, KRISTINE C. |
 | Section | BSIT 4A |
 | Instructor | Jenkielyn C. Torres |
-| Date | October 2026 |
+| Date | October 11, 2026 |
 
 ---
 
+
 ## 1. Project Overview
 
-This manual explains how the secure multi-tier web application was built, deployed, secured, backed up, and maintained. The application uses WordPress with a MySQL database. Both run as Docker containers inside an Ubuntu Server 24.04 LTS virtual machine on VirtualBox. The virtual machine is stored on the laptop's internal drive.
+This project deploys a secure multi-tier web application on a Linux server. WordPress is the web tier and MySQL is the database tier. Both run as Docker containers on an Ubuntu Server virtual machine hosted in VirtualBox on a Windows laptop. The VM files are kept on an external drive so the internal drive stays free.
 
-Follow the sections in order and test each part before moving to the next. Replace `YOURUSER` with your GitHub username and `youruser` with the Ubuntu username you created. Keep all passwords private.
+The setup was built to meet four goals.
 
-### 1.1 Project at a glance
+- Data stays safe after container or VM restarts.
+- Only the ports that are really needed are open.
+- A database backup runs automatically every day.
+- Everything is documented and stored in the GitHub repository for handover.
 
-| Item | Choice |
+
+### Key facts
+
+| Item | Value |
 | --- | --- |
-| Application stack | WordPress + MySQL |
-| Hypervisor | VirtualBox (Type 2) |
-| Guest OS | Ubuntu Server 24.04 LTS |
-| VM storage | Laptop internal drive (`C:\CCM101\VMs`) |
-| Network | NAT with port forwarding: host `2222` to guest `22`, host `8080` to guest `80` |
-| Security | UFW, default deny, allow ports 22 and 80 only |
-| Automation | Bash backup script and cron at 11:00 PM |
-| Repository lab folder | `Laboratory-10-Enterprise-Cloud-Architect` |
+| Server name | ccm101-server |
+| Operating system | Ubuntu Server 26.04 LTS |
+| Hypervisor | Oracle VirtualBox (Type 2) |
+| Containers | ccm101-wordpress and ccm101-mysql |
+| Persistent volumes | wordpress_data and db_data |
+| Open ports | 22 (SSH) and 80 (HTTP) |
+| Backup schedule | Every day at 11 PM |
+| Repository | github.com/jdestibar/CCM101-jestibar |
 
-### 1.2 Folder layout on the laptop
-
-```text
-C:\CCM101\
-├── ISO\          Ubuntu Server ISO
-├── VMs\          CCM101-Ubuntu-Server and backup-disk.vdi
-├── Repo\         GitHub repository clone
-├── Screenshots\  Proof for the manual
-└── VM-Backups\   Exported .OVA copy
-```
 
 ## 2. Infrastructure and Architecture
 
-### Architecture and setup screenshots
-
-The following images are extracted from the submitted operational-manual PDF. They are stored in the `images/` folder so they render inline when this Markdown file is viewed in GitHub.
-
-**Figure 1. Source image 1**
-
-![Source image 1 from submitted manual](images/page-01-image-01.jpeg)
-
-**Figure 2. Source image 2**
-
-![Source image 2 from submitted manual](images/page-01-image-02.jpeg)
-
-**Figure 3. Source image 3**
-
-![Source image 3 from submitted manual](images/page-03-image-03.png)
-
-**Figure 4. Source image 4**
-
-![Source image 4 from submitted manual](images/page-05-image-03.png)
-
-**Figure 5. Source image 5**
-
-![Source image 5 from submitted manual](images/page-05-image-04.png)
-
-**Figure 6. Source image 6**
-
-![Source image 6 from submitted manual](images/page-06-image-03.jpeg)
-
-
-
-The architecture diagram shows the layers from the host laptop to the application containers. The browser and terminal reach the VM through VirtualBox NAT port forwarding. UFW protects the Ubuntu VM, and Docker runs the two containers on a private backend network.
-
-### 2.1 Layers, outside to inside
+The system is built in layers, from the physical laptop down to the application containers.
 
 | Layer | Role |
 | --- | --- |
-| Host laptop (Windows 11) | Contains the internal drive and VirtualBox Type 2 hypervisor. |
-| Internal drive (`C:`) | Holds the VM disk and `backup-disk.vdi` inside `C:\CCM101\VMs`. |
-| VirtualBox | Runs the Ubuntu Server virtual machine. |
-| UFW firewall | Uses default deny and allows ports 22 and 80. |
-| Docker backend network | Connects the WordPress and MySQL containers privately. |
-| Containers | `ccm101-wordpress` serves the site; `ccm101-mysql` stores the database. |
-| Persistent volumes | `wordpress_data` and `db_data` keep data outside the containers. |
+| Host laptop (Windows 11) | Runs VirtualBox and provides the browser and terminal used to manage the server. |
+| VirtualBox | Type 2 hypervisor that runs the Ubuntu virtual machine. |
+| External drive | Stores the VM disk and the separate backup disk. |
+| Ubuntu Server VM | The Linux server that runs Docker and the firewall. |
+| UFW firewall | Default deny policy that allows only SSH and HTTP. |
+| Docker network (backend) | Private network that connects WordPress to MySQL. |
+| Containers | ccm101-wordpress serves the site and ccm101-mysql stores the data. |
+| Volumes | wordpress_data and db_data keep the data outside the containers. |
 
-### 2.2 Traffic paths
 
-| From | To | Used for |
+### How users and admins reach the server
+
+VirtualBox uses NAT with port forwarding, which works on any network including school wifi.
+
+| From the laptop | Goes to | Used for |
 | --- | --- | --- |
-| Browser at `localhost:8080` | VM port 80 | WordPress website |
-| Terminal at `localhost:2222` | VM port 22 | SSH administration |
-| Cron script | `/mnt/backup` | Database backup storage |
+| localhost port 8080 | VM port 80 | WordPress website |
+| localhost port 2222 | VM port 22 | SSH administration |
+
+<img width="752" height="862" alt="architecture-diagram png" src="https://github.com/user-attachments/assets/6f4f9008-d4b2-4800-8dde-c22c63f7b0f9" />
+
 
 ## 3. Required Resources
 
-### 3.1 Hardware
 
-- Laptop with at least 8 GB of RAM. Allocate 4 GB to the VM, or 3 GB if the laptop has limited memory.
-- At least 60 GB free on the `C:` drive. The 40 GB VM disk and 10 GB backup disk are dynamically allocated and grow as needed.
-- Virtualization enabled in BIOS (Intel VT-x or AMD SVM Mode).
+### Hardware
 
-### 3.2 Software and accounts
+- Laptop with virtualization turned on (Intel VT-x or AMD SVM) and at least 8 GB of RAM.
+- External drive with at least 60 GB free, formatted exFAT or NTFS, on a USB 3 port.
 
-| Software or account | Source and notes |
+
+### Software
+
+- Oracle VirtualBox and the Ubuntu Server ISO
+- Git for Windows, VS Code, and draw.io
+- A web browser, a GitHub account.
+
+
+### Virtual machine sizing
+
+| Setting | Value |
 | --- | --- |
-| VirtualBox | `virtualbox.org`; keep the default options and accept driver prompts. |
-| Git for Windows | `git-scm.com`; default options. |
-| VS Code | `code.visualstudio.com`; default options. |
-| draw.io | `app.diagrams.net` or the desktop app. |
-| Ubuntu Server ISO | `ubuntu.com/download/server`, version 24.04 LTS. |
-| GitHub account | `github.com` |
-| KillerCoda account | `killercoda.com`; can sign in with GitHub. |
+| Name | CCM101-Ubuntu-Server |
+| Type and version | Linux, Ubuntu (64-bit) |
+| Memory | 4096 MB (3072 MB if the laptop is low on RAM) |
+| Processors | 2 |
+| System disk | 40 GB VDI, dynamically allocated |
+| Backup disk | 10 GB VDI, dynamically allocated |
 
-### 3.3 Check that virtualization is enabled
-
-1. Press `Ctrl+Shift+Esc` to open Task Manager.
-2. Select **Performance**, then **CPU**.
-3. Check that **Virtualization** says **Enabled**.
-4. If it says Disabled, restart the computer and enter BIOS using the appropriate key (often F2, F10, Delete, or Esc). Enable Intel VT-x or AMD SVM Mode, then save and exit.
-
-### 3.4 Set the Git identity
-
-Use your own name and email address:
-
-```bash
-git config --global user.name "YOUR NAME"
-git config --global user.email "YOUR EMAIL"
-```
 
 ## 4. VM and Network Setup
 
-### 4.1 Prepare the project folders
 
-Run the following in PowerShell, then move the Ubuntu ISO from Downloads into `C:\CCM101\ISO`.
+### 4.1 Prepare the external drive
 
-```powershell
-mkdir C:\CCM101\ISO, C:\CCM101\VMs, C:\CCM101\Repo, C:\CCM101\Screenshots, C:\CCM101\VM-Backups
-```
-
-In VirtualBox, open **File → Preferences → General** and set **Default Machine Folder** to `C:\CCM101\VMs`.
-
-Clone the repository and create the lab folder. Replace the repository URL and folder name if yours differs.
-
-```powershell
-cd C:\CCM101\Repo
-git clone https://github.com/YOURUSER/CCM101-YOURREPO.git
-cd CCM101-YOURREPO
-mkdir Laboratory-10-Enterprise-Cloud-Architect
-```
+1. Plug the drive into a USB 3 port and note its drive letter.
+2. Create the folders ISO, VMs, Repo, Screenshots, and VM-Backups inside a CCM101 folder on the drive.
+3. In VirtualBox open File, Preferences, General and set the Default Machine Folder to the VMs folder on the drive.
 
 ### 4.2 Create the virtual machine
 
-1. Click **New**.
-2. Name the VM `ccm101-server` and set its folder to `C:\CCM101\VMs`.
-3. Select the Ubuntu Server ISO from `C:\CCM101\ISO`.
-4. Choose **Linux** and **Ubuntu (64-bit)**.
-5. Tick **Skip Unattended Installation**.
-6. Set memory to 4000 MB and processors to 4.
-7. Create a 40 GB virtual hard disk, dynamically allocated (do not pre-allocate the full size), then finish.
+Create a new VM with the sizing in section 3 and skip unattended installation. Confirm that the VM path starts with the external drive letter.
 
-### 4.3 Configure NAT and port forwarding
+### 4.3 Configure NAT port forwarding
 
-Before the first boot, select the VM and open **Settings → Network → Adapter 1**. Set **Attached to** to **NAT**, expand **Advanced**, and select **Port Forwarding**. Leave Host IP and Guest IP blank.
+Before the first boot, open Settings, Network, Adapter 1, set it to NAT, then add these rules under Advanced, Port Forwarding.
 
 | Name | Protocol | Host port | Guest port |
-| --- | --- | ---: | ---: |
+| --- | --- | --- | --- |
 | ssh | TCP | 2222 | 22 |
 | web | TCP | 8080 | 80 |
 
+<img width="1366" height="768" alt="Screenshot (19)" src="https://github.com/user-attachments/assets/7886da53-8ca2-44bd-b85c-2b1ead1cc3f9" />
+
+
 ### 4.4 Install Ubuntu Server
 
-1. Start the VM and choose **Try or Install Ubuntu Server**.
-2. Select English and English (US) keyboard settings.
-3. Keep the default DHCP network, leave the proxy blank, and use the default mirror.
-4. Select the entire 40 GB disk and keep the default LVM layout.
-5. Create your profile, set the server name to `ccm101-server`, and create a private username and password.
-6. Skip Ubuntu Pro for now, tick **Install OpenSSH server**, and select no featured snaps.
-7. Reboot after installation. If the VM returns to the installer, shut it down and remove the ISO under **Settings → Storage**.
+- Use the entire 40 GB disk with the default storage layout.
+- Set the server name to ccm101-server and create an administrator user.
+- Tick Install OpenSSH server and skip the featured snaps.
+- Reboot, then log in on the console.
 
-### 4.5 First login and update
 
-Run these commands in the Ubuntu console:
+### 4.5 Update the server and connect with SSH
 
 ```bash
 sudo apt update
@@ -193,80 +137,58 @@ sudo apt upgrade -y
 ip addr
 ```
 
-NAT commonly assigns an address such as `10.0.2.15` to the `enp0s3` interface.
+From PowerShell on the laptop, connect using your own username. Use this SSH window for all later commands so copy and paste works.
 
-### 4.6 Connect with SSH from Windows
-
-Open PowerShell on the laptop. Type `yes` at the fingerprint prompt, then enter your Ubuntu password. Use this SSH window for later commands so copy and paste works.
-
-```powershell
-ssh -p 2222 youruser@127.0.0.1
+```bash
+ssh -p 2222 estibargroup@127.0.0.1
 ```
 
-Replace `youruser` with the Ubuntu username you created.
+<img width="1366" height="768" alt="Screenshot (45)" src="https://github.com/user-attachments/assets/3214c65f-5fee-4d7d-b980-7434763d190d" />
 
-### 4.7 Create and mount the virtual backup disk
 
-Shut the VM down with `sudo poweroff`. In VirtualBox, select the VM and open **Settings → Storage**. Add a hard disk to the SATA controller and create a 10 GB VDI named `backup-disk` in `C:\CCM101\VMs`. Choose dynamically allocated storage. Start the VM and reconnect over SSH.
+### 4.6 Add the backup disk
 
-Identify the new empty disk, usually `/dev/sdb`. Check its size carefully because formatting the wrong disk erases data.
+A second 10 GB virtual disk stored on the external drive holds the database backups. Shut the VM down, attach the new disk in Settings, Storage, then start the VM and find it.
 
 ```bash
 lsblk
 ```
 
-Format and mount the backup disk:
+The new empty 10 GB disk is usually sdb. Check the size first because formatting the wrong disk erases it. Then format and mount it.
 
 ```bash
 sudo mkfs.ext4 /dev/sdb
-sudo mkdir -p /mnt/backup
-sudo mount /dev/sdb /mnt/backup
-sudo chown $USER:$USER /mnt/backup
+sudo mkdir -p /mnt/ssd-backup
+sudo mount /dev/sdb /mnt/ssd-backup
+sudo chown $USER:$USER /mnt/ssd-backup
 sudo blkid /dev/sdb
 ```
 
-Copy the UUID shown by `blkid`, then edit `/etc/fstab`:
+Copy the UUID from the last command and add this line at the bottom of /etc/fstab so the disk mounts on every boot. The nofail option stops the VM from hanging if the disk is missing.
 
 ```bash
-sudo nano /etc/fstab
+UUID=PASTE-YOUR-UUID-HERE /mnt/ssd-backup ext4 defaults,nofail 0 2
 ```
-
-Add a line at the bottom using your actual UUID:
-
-```text
-UUID=YOUR-UUID-HERE /mnt/backup ext4 defaults,nofail 0 2
-```
-
-Save with `Ctrl+O`, press Enter, then exit with `Ctrl+X`. Test the entry:
 
 ```bash
 sudo mount -a
-df -h | grep /mnt/backup
+df -h | grep ssd-backup
 ```
+
+<img width="1366" height="768" alt="Screenshot (23)" src="https://github.com/user-attachments/assets/6908b531-6629-41ea-8fd1-a0c7f43ee37a" />
+
 
 ## 5. Docker Deployment
 
 ### 5.1 Install Docker and Compose
 
-The manual uses Docker's official repository first:
-
-```bash
-sudo apt install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo ${UBUNTU_CODENAME:-$VERSION_CODENAME}) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-If the Compose package is unavailable, use the fallback packages:
+Install Docker Engine and the Compose plugin from the Ubuntu repository.
 
 ```bash
 sudo apt install -y docker.io docker-compose-v2
 ```
 
-### 5.2 Allow your user to run Docker
+Let your user run Docker without sudo, then log out and back in over SSH so the change applies.
 
 ```bash
 sudo usermod -aG docker $USER
@@ -274,13 +196,7 @@ sudo systemctl enable docker
 exit
 ```
 
-Reconnect over SSH so the group change takes effect:
-
-```powershell
-ssh -p 2222 youruser@127.0.0.1
-```
-
-Verify the installation:
+After reconnecting, verify the install.
 
 ```bash
 docker --version
@@ -288,36 +204,29 @@ docker compose version
 docker run hello-world
 ```
 
-### 5.3 Create the project folder and `.env` file
+<img width="1366" height="768" alt="Screenshot (21)" src="https://github.com/user-attachments/assets/6fa6c436-fc0b-459f-9c99-6c0df06a667d" />
 
-The `.env` file keeps database passwords out of the Compose file. Use strong passwords and never commit the real `.env` file to GitHub.
+
+### 5.2 Create the project files
 
 ```bash
-mkdir -p ~/ccm101-final-requirement
-cd ~/ccm101-final-requirement
+mkdir -p ~/ccm101-final
+cd ~/ccm101-final
 nano .env
 ```
 
-Add the following, replacing the example passwords with strong private values:
-
-```dotenv
-MYSQL_DATABASE=wordpress
-MYSQL_USER=wordpress
-MYSQL_PASSWORD=REPLACE_WITH_A_STRONG_PASSWORD
-MYSQL_ROOT_PASSWORD=REPLACE_WITH_A_DIFFERENT_STRONG_PASSWORD
-```
-
-### 5.4 Create `docker-compose.yml`
-
-Create the file:
+The .env file keeps passwords out of the compose file. Replace the sample passwords with your own.
 
 ```bash
-nano docker-compose.yml
+MYSQL_DATABASE=wordpress
+MYSQL_USER=wordpress
+MYSQL_PASSWORD=ChangeMe_User123
+MYSQL_ROOT_PASSWORD=ChangeMe_Root123
 ```
 
-Paste this configuration:
+### 5.3 docker-compose.yml
 
-```yaml
+```bash
 services:
   db:
     image: mysql:8.0
@@ -365,75 +274,65 @@ networks:
   backend:
 ```
 
-Only WordPress publishes a port. MySQL has no published host port and can be reached only through the private Docker network. The health check makes WordPress wait until the database is ready.
+Only WordPress publishes a port. MySQL has no published port, so it can only be reached inside the backend network. The health check makes WordPress wait until the database is ready.
 
-### 5.5 Create a safe example environment file
 
-Create a sanitized version for the repository:
-
-```bash
-sed 's/=.*/=CHANGE_ME/' .env > .env.example
-cat .env.example
-```
-
-Commit `.env.example`, not `.env`.
-
-### 5.6 Start the stack
+### 5.4 Start the stack
 
 ```bash
+docker compose config
 docker compose up -d
 docker compose ps
 ```
 
-Both containers should be running. The database may take around 30 seconds to report healthy.
+The first run downloads the images, which can take several minutes. Then open the site in the laptop browser using localhost and port 8080, choose a language, and fill in the site title, an admin user, a strong password, and an email.
 
-### 5.7 Open WordPress
+<img width="1366" height="768" alt="Screenshot (25)" src="https://github.com/user-attachments/assets/33b7c712-fb33-4e82-807b-d355fac74620" />
+<img width="1366" height="768" alt="Screenshot (25)" src="https://github.com/user-attachments/assets/c8fd81bf-d2f7-47c9-bc50-bbb54aba9882" />
 
-1. Open a browser on the laptop and visit `http://localhost:8080`.
-2. Choose a language and continue.
-3. Enter the site title `Cloud Computing Application`, create an administrator username and strong password, and provide your email.
-4. Install WordPress and log in.
-5. Create and publish a test post titled **TAMAYO GROUP** that lists the group members.
+<img width="1366" height="768" alt="Screenshot (27)" src="https://github.com/user-attachments/assets/ac5090fd-4399-487e-a6e0-018940aac6fd" />
 
-## 6. Persistent Storage and the Reboot Test
 
-The database and WordPress files are stored in Docker volumes. These volumes survive container removal and VM reboots, as long as the volumes are not explicitly deleted.
+## 6. Persistent Storage and Reboot Test
 
-| Volume | Container path | Purpose |
+Docker volumes keep data outside the containers, so deleting or recreating a container does not delete the site or the database.
+
+| Volume | Mounted in container at | Holds |
 | --- | --- | --- |
-| `db_data` | `/var/lib/mysql` | MySQL database files |
-| `wordpress_data` | `/var/www/html` | WordPress files, themes, and uploads |
+| db_data | /var/lib/mysql | MySQL database files |
+| wordpress_data | /var/www/html | WordPress files, themes, uploads |
 
-### 6.1 Container restart test
+
+### Persistence test
+
+1. Create one test post in WordPress.
+2. Remove and recreate the containers, then refresh the site. The post should still be there.
+3. Reboot the VM, reconnect over SSH, and check that both containers came back by themselves and the post still exists.
 
 ```bash
 docker compose down
 docker compose up -d
-```
-
-Refresh `http://localhost:8080` and confirm that the test post is still present. Do not add `-v` to `docker compose down`, because that removes the Compose volumes.
-
-### 6.2 VM reboot test
-
-```bash
 sudo reboot
 ```
 
-Wait about one minute, reconnect over SSH, and run:
+After reconnecting, check the containers, volumes, and backup disk.
 
 ```bash
 docker ps
 docker volume ls
-df -h | grep /mnt/backup
+df -h | grep ssd-backup
 ```
+<img width="1366" height="768" alt="Screenshot (34)" src="https://github.com/user-attachments/assets/3da0aa61-b632-4632-be9f-19436bda958b" />
+<img width="1366" height="768" alt="Screenshot (35)" src="https://github.com/user-attachments/assets/7a24d37c-4936-4c3a-ae0b-3d97a15e461a" />
+<img width="1366" height="768" alt="Screenshot (36)" src="https://github.com/user-attachments/assets/6b360571-558e-4031-ba31-2dcbc2268d12" />
+<img width="1366" height="768" alt="Screenshot (48)" src="https://github.com/user-attachments/assets/8f27fd71-37e8-46a3-8606-55ee0510a1b9" />
 
-Both containers should be running because they use `restart: unless-stopped`. The volumes should be listed and the backup disk should be mounted. Docker prefixes volume names with the project folder name, so the volumes may appear as `ccm101-final-requirement_db_data` and `ccm101-final-requirement_wordpress_data`. Refresh `localhost:8080` and confirm that the test post survived.
 
-## 7. Security Hardening (UFW)
 
-UFW uses a default-deny policy for incoming traffic. Only SSH (port 22) and HTTP (port 80) are allowed. MySQL (port 3306) is not opened because it communicates with WordPress through the Docker network.
 
-Allow SSH before enabling UFW to avoid locking yourself out:
+## 7. Security Hardening
+
+The firewall uses a default deny policy for incoming traffic and opens only what the application needs. Allow SSH before enabling UFW or you will lock yourself out.
 
 ```bash
 sudo apt install -y ufw
@@ -445,45 +344,33 @@ sudo ufw enable
 sudo ufw status verbose
 ```
 
-Type `y` when asked to confirm.
-
 | Rule | Reason |
 | --- | --- |
-| Default deny incoming | Blocks incoming traffic unless explicitly allowed. |
-| Default allow outgoing | Allows the server to download updates and images. |
-| Allow `22/tcp` | Permits SSH administration. |
-| Allow `80/tcp` | Permits HTTP traffic to the WordPress service. |
-| Do not open `3306/tcp` | Keeps MySQL private inside the Docker network. |
+| Default deny incoming | Everything not listed is blocked. |
+| Default allow outgoing | The server can still download updates and images. |
+| Allow 22/tcp | Remote administration over SSH. |
+| Allow 80/tcp | Public access to the WordPress site. |
+| Port 3306 not opened | MySQL is only needed by WordPress inside the Docker network. |
 
-### 7.1 Test the firewall
+<img width="1366" height="768" alt="Screenshot (39)" src="https://github.com/user-attachments/assets/da2825dd-1bb6-413c-b4b5-02b542f48bda" />
 
-- Reload `http://localhost:8080` and confirm that the site works.
-- Open a second PowerShell window and confirm SSH still works:
+### Other security practices
 
-```powershell
-ssh -p 2222 youruser@127.0.0.1
-```
+- Passwords live in .env, which is never committed to GitHub.
+- Docker writes its own firewall rules, so a published container port can bypass UFW. For this reason only WordPress publishes a port.
+- Keep the system updated with sudo apt update and sudo apt upgrade.
+- Use strong passwords for the Ubuntu user and the WordPress admin.
 
-- Do not run `sudo ufw allow 3306`.
 
 ## 8. Backup Automation
 
-### 8.1 Create the backup script
-
-The script dumps the WordPress database to `/mnt/backup`, deletes database dumps older than seven days, and records a log line. If the backup disk is not mounted, it falls back to a folder in the user's home directory.
-
-```bash
-cd ~/ccm101-final-requirement
-nano automation-script.sh
-```
-
-Add this script:
+The script automation-script.sh backs up the WordPress database. It saves to the backup disk when it is mounted and falls back to the home folder if it is not. It also deletes backups older than 7 days and writes a log line.
 
 ```bash
 #!/bin/bash
 
-if mountpoint -q /mnt/backup; then
-  BACKUP_DIR="/mnt/backup/ccm101-backups"
+if mountpoint -q /mnt/ssd-backup; then
+  BACKUP_DIR="/mnt/ssd-backup/ccm101-backups"
 else
   BACKUP_DIR="$HOME/ccm101-backups"
 fi
@@ -491,204 +378,132 @@ fi
 DATE=$(date +"%Y-%m-%d_%H-%M-%S")
 mkdir -p "$BACKUP_DIR"
 
-docker exec ccm101-mysql sh -c \
-  'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" wordpress' \
+docker exec ccm101-mysql sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" wordpress' \
   > "$BACKUP_DIR/wordpress_$DATE.sql"
 
 find "$BACKUP_DIR" -name "wordpress_*.sql" -mtime +7 -delete
 echo "$(date) backup saved to $BACKUP_DIR" >> "$HOME/backup.log"
 ```
 
-### 8.2 Make it executable and test it
+
+### Make it executable and test it
 
 ```bash
+cd ~/ccm101-final
 chmod +x automation-script.sh
 ls -l automation-script.sh
 ./automation-script.sh
-ls -lh /mnt/backup/ccm101-backups
+ls -lh /mnt/ssd-backup/ccm101-backups
 cat ~/backup.log
 ```
+<img width="1366" height="768" alt="Screenshot (40)" src="https://github.com/user-attachments/assets/dcf2c3f0-9d01-4e52-9a54-a74aee19a646" />
 
-Check that the script has execute permission, a non-empty `.sql` backup file is created, and the log records the run.
 
-### 8.3 Schedule the backup with cron
-
-Open the cron editor:
+### Schedule it with cron
 
 ```bash
 crontab -e
 ```
 
-Add the following line, replacing `youruser` with your actual Ubuntu username:
+Add this line at the bottom, using the real username.
 
-```cron
-0 23 * * * /home/youruser/ccm101-final-requirement/automation-script.sh >> /home/youruser/cron.log 2>&1
+```bash
+0 23 * * * /home/estibargroup/ccm101-final/automation-script.sh >> /home/estibargroup/cron.log 2>&1
 ```
 
 | Field | Value | Meaning |
 | --- | --- | --- |
-| Minute | `0` | At minute 0 |
-| Hour | `23` | At 11 PM |
-| Day of month | `*` | Every day of the month |
-| Month | `*` | Every month |
-| Day of week | `*` | Every day of the week |
+| Minute | 0 | At minute 0 |
+| Hour | 23 | At 11 PM |
+| Day of month | * | Every day |
+| Month | * | Every month |
+| Day of week | * | Every weekday |
 
-Confirm the schedule:
+Check it with crontab -l. For a demo, change the schedule to * * * * * so it runs every minute, wait two minutes, check the backup folder, then change it back. The 11 PM job only runs if the VM is switched on at that time.
 
-```bash
-crontab -l
-```
+<img width="1366" height="768" alt="Screenshot (41)" src="https://github.com/user-attachments/assets/0df38ad4-5d59-4bf4-ba8f-f06bae7eff26" />
 
-### 8.4 Prove that cron works
-
-1. Run `crontab -e` and temporarily change the schedule to `* * * * *` so it runs every minute.
-2. Wait two minutes, then check the backup folder and cron log.
-3. Change the schedule back to `0 23 * * *` and confirm with `crontab -l`.
-
-```bash
-ls -lh /mnt/backup/ccm101-backups
-cat ~/cron.log
-```
-
-The scheduled backup runs only while the VM is powered on at 11:00 PM.
 
 ## 9. Backup Restore Procedure
 
-Use this procedure to restore the WordPress database from a saved `.sql` file. Restoring replaces the current database contents with the contents of the selected backup.
+Use this when the database is damaged or data was deleted by mistake. Restoring replaces the current database content with the backup.
 
-1. List the available backups and choose the file to restore.
-
-```bash
-ls -lh /mnt/backup/ccm101-backups
-```
-
-2. Replace `FILENAME` with the actual backup file name and run:
+1. List the available backups and pick one.
+2. Run the restore command with that file.
+3. Refresh the website and confirm the content is back.
 
 ```bash
-docker exec -i ccm101-mysql sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" wordpress' < /mnt/backup/ccm101-backups/FILENAME.sql
+ls /mnt/ssd-backup/ccm101-backups
 ```
 
-3. Refresh `http://localhost:8080` and confirm the content is restored.
+```bash
+docker exec -i ccm101-mysql sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" wordpress' < /mnt/ssd-backup/ccm101-backups/FILENAME.sql
+```
+
+To restore the newest backup without typing the file name, use this.
+
+```bash
+LATEST=$(ls -t /mnt/ssd-backup/ccm101-backups/wordpress_*.sql | head -1)
+docker exec -i ccm101-mysql sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" wordpress' < "$LATEST"
+```
+
 
 ## 10. Maintenance Commands
 
 | Task | Command |
 | --- | --- |
-| Show running containers | `docker compose ps` |
-| WordPress logs | `docker logs ccm101-wordpress` |
-| MySQL logs | `docker logs ccm101-mysql` |
-| List persistent volumes | `docker volume ls` |
-| Firewall status | `sudo ufw status` |
-| Scheduled cron job | `crontab -l` |
-| Check backup disk mount | `df -h \| grep /mnt/backup` |
-| Backup history | `cat ~/backup.log` |
+| Show running containers | docker compose ps |
+| Show all containers | docker ps -a |
+| WordPress logs | docker logs ccm101-wordpress |
+| MySQL logs | docker logs ccm101-mysql |
+| Restart the stack | docker compose restart |
+| Stop the stack (keeps data) | docker compose down |
+| Start the stack | docker compose up -d |
+| Update images | docker compose pull && docker compose up -d |
+| List volumes | docker volume ls |
+| Firewall status | sudo ufw status verbose |
+| Cron jobs | crontab -l |
+| Cron and backup logs | cat ~/cron.log ~/backup.log |
+| Disk space | df -h |
+| Update Ubuntu | sudo apt update && sudo apt upgrade -y |
+| Shut down safely | sudo poweroff |
 
-### 10.1 Safe shutdown
 
-- Run `sudo poweroff` and wait for the VM window to close before shutting down or restarting the laptop.
-- Keep the laptop plugged in while the VM runs. Sudden power loss can corrupt the VM disk.
-- Keep at least 20 GB free on the `C:` drive because the virtual disks grow as data is added.
+### Shutting down with the external drive
 
-### 10.2 Make a safety copy of the VM
-
-1. Run `sudo poweroff` and wait for the VM to stop.
-2. In VirtualBox, open **File → Export Appliance**.
-3. Select the VM, click **Next**, and save it as `C:\CCM101\VM-Backups\ccm101-server.ova`.
-4. Copy the `.ova` file to a USB drive or cloud storage as well. A backup stored only on the same drive as the VM may be lost if that drive fails.
+1. Run sudo poweroff in the SSH window and wait for the VM window to close.
+2. Check that VirtualBox shows the VM as Powered Off, then close VirtualBox.
+3. Use Safely Remove Hardware in Windows before unplugging the drive.
 
 ## 11. Troubleshooting
 
-| Problem | Likely cause or fix |
-| --- | --- |
-| Virtualization shows Disabled | Restart, enter BIOS (F2, F10, Delete, or Esc), and enable Intel VT-x or AMD SVM Mode. |
-| VM boots back into the installer | Shut down the VM, remove the ISO from **Settings → Storage**, then start again. |
-| SSH is refused on port 2222 | Check that the VM is running, the port-forwarding rule maps 2222 to 22, and OpenSSH was installed. |
-| Locked out after enabling UFW | Open the VM console and run `sudo ufw allow 22/tcp`. |
-| Docker permission denied | Run `sudo usermod -aG docker $USER`, exit the SSH session, and reconnect. |
-| `docker-compose-plugin` not found | Use `sudo apt install -y docker.io docker-compose-v2`. |
-| Site does not load at `localhost:8080` | Run `docker compose ps` and `docker logs ccm101-wordpress`; check the 8080-to-80 forwarding rule and UFW port 80 rule. |
-| Backup disk not mounted after reboot | Check the UUID line in `/etc/fstab`, then run `sudo mount -a` and `df -h`. |
-| Backup file is empty | Check that the database container is running and the `.env` passwords are correct. |
-| Cron job did not run | The VM must be powered on at 11:00 PM. Check `crontab -l` and `cat ~/cron.log`. |
-| Data disappeared | Avoid `docker compose down -v`, which deletes volumes. Restore from a `.sql` backup using Section 9. |
-| Port 80 is busy (for example, in KillerCoda) | Change the Compose mapping to `"8081:80"` and open the corresponding host port. |
+| Problem | Likely cause | Fix |
+| --- | --- | --- |
+| Website does not open at localhost 8080 | Containers stopped or the port rule is missing | Run docker compose ps and check the web rule in VirtualBox port forwarding. |
+| SSH says connection refused | VM still booting or the ssh rule is missing | Wait a minute, then check the ssh rule for host port 2222. |
+| Docker says permission denied | Group change not applied yet | Run exit, then SSH in again. |
+| WordPress cannot reach the database | MySQL not healthy or wrong password in .env | Check docker logs ccm101-mysql and compare the .env values. |
+| Backup file is empty or missing | MySQL container not running or script not executable | Run docker ps and chmod +x on the script, then run it by hand. |
+| Backup disk not mounted after reboot | Wrong UUID in /etc/fstab | Run sudo blkid, fix the line, then sudo mount -a. |
+| Locked out after enabling UFW | Port 22 was not allowed first | Use the VM console to log in and run sudo ufw allow 22/tcp. |
+| VM is paused or very slow | Drive disconnected, full, or low RAM | Check the drive and free space, then use Machine, Resume in VirtualBox. |
+| VM not found after replugging the drive | Drive letter changed | Check the letter in File Explorer and the Default Machine Folder path. |
+
 
 ## 12. Conclusion
 
-This project delivered a secure multi-tier web application with WordPress and MySQL running in separate Docker containers on an Ubuntu Server VM hosted by VirtualBox. NAT port forwarding allows the laptop to reach the website and SSH. Persistent volumes retain data across container restarts and VM reboots. UFW applies a default-deny policy and exposes only ports 22 and 80, keeping MySQL private inside the Docker network. A Bash script and cron job back up the database to a dedicated virtual disk every night at 11:00 PM, and the restore procedure provides a recovery path.
+This infrastructure gives a persistent multi-tier web application with container isolation, a default deny firewall, automated database backups, and clear recovery steps. The VM and backup disk live on an external drive, which keeps the laptop free and makes the setup easy to move.
 
-Together, these steps demonstrate virtualization, Linux and SSH administration, Docker and Compose, networking, persistent storage, firewall security, and automation.
+One limit is that the VM disk and the backup disk sit on the same physical drive. In a real deployment, backups would also be copied to another machine or to cloud storage.
 
-## Repository contents
 
-| File or folder | Purpose |
+### Repository contents
+
+| File | Purpose |
 | --- | --- |
-| `README.md` | Short project overview |
-| `docker-compose.yml` | WordPress and MySQL container configuration |
-| `.env.example` | Safe example of required environment variables |
-| `automation-script.sh` | Automated database backup script |
-| `operational-manual.md` | This manual |
-| `images/` | Screenshots and diagrams embedded throughout this manual |
-
----
-
-## Appendix A. Screenshots from the Original Manual
-
-These images are embedded from the original PDF. GitHub displays them inline when the Markdown file and the `images/` folder are committed together.
-
-### Figure 7. Original manual image
-
-![Figure 7 from the original manual](images/page-07-image-03.jpeg)
-
-### Figure 8. Original manual image
-
-![Figure 8 from the original manual](images/page-07-image-04.jpeg)
-
-### Figure 9. Original manual image
-
-![Figure 9 from the original manual](images/page-08-image-03.jpeg)
-
-### Figure 10. Original manual image
-
-![Figure 10 from the original manual](images/page-09-image-03.jpeg)
-
-### Figure 11. Original manual image
-
-![Figure 11 from the original manual](images/page-11-image-03.jpeg)
-
-### Figure 12. Original manual image
-
-![Figure 12 from the original manual](images/page-11-image-04.jpeg)
-
-### Figure 13. Original manual image
-
-![Figure 13 from the original manual](images/page-11-image-05.png)
-
-### Figure 14. Original manual image
-
-![Figure 14 from the original manual](images/page-12-image-03.jpeg)
-
-### Figure 15. Original manual image
-
-![Figure 15 from the original manual](images/page-13-image-03.jpeg)
-
-### Figure 16. Original manual image
-
-![Figure 16 from the original manual](images/page-13-image-04.png)
-
-### Figure 17. Original manual image
-
-![Figure 17 from the original manual](images/page-14-image-03.jpeg)
-
-### Figure 18. Original manual image
-
-![Figure 18 from the original manual](images/page-15-image-03.png)
-
-### Figure 19. Original manual image
-
-![Figure 19 from the original manual](images/page-15-image-04.png)
-
-### Figure 20. Original manual image
-
-![Figure 20 from the original manual](images/page-16-image-03.jpeg)
-
+| README.md | Short project overview |
+| architecture-diagram.png | Topology of host, hypervisor, VM, firewall, and containers |
+| docker-compose.yml | WordPress and MySQL stack |
+| automation-script.sh | Database backup script |
+| operational-manual.md | This manual |
+| final-reflection.md | Reflection from Mission 1 to Mission 10 |
