@@ -14,11 +14,13 @@ This laboratory focuses on designing, deploying, and documenting a production-re
 - Evaluate architecture performance, reliability, and real-world applicability
 
 ## Repository Structure
-Laboratory-10-Enterprise-Cloud-Architect/
-├── README.md
-├── architecture-diagram.png
-├── automation-script.sh
-├── docker-compose.yml
-├── operational-manual.md
-├── final-reflection.md
-└── screenshots/
+└── Laboratory-10-Enterprise-Cloud-Architect
+    │
+    ├── README.md
+    ├── architecture-diagram.png
+    ├── automation-script.sh
+    ├── docker-compose.yml
+    ├── operational-manual.md
+    ├── final-reflection.md
+    │
+    └── screenshots/
