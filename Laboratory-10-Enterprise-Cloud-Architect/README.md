@@ -14,6 +14,8 @@ This laboratory focuses on designing, deploying, and documenting a production-re
 - Evaluate architecture performance, reliability, and real-world applicability
 
 ## Repository Structure
+
+``` text
 └── Laboratory-10-Enterprise-Cloud-Architect
     │
     ├── README.md
@@ -24,3 +26,4 @@ This laboratory focuses on designing, deploying, and documenting a production-re
     ├── final-reflection.md
     │
     └── screenshots/
+```
