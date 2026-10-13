@@ -45,6 +45,36 @@ C:\CCM101\
 
 ## 2. Infrastructure and Architecture
 
+### Architecture and setup screenshots
+
+The following images are extracted from the submitted operational-manual PDF. They are stored in the `images/` folder so they render inline when this Markdown file is viewed in GitHub.
+
+**Figure 1. Source image 1**
+
+![Source image 1 from submitted manual](images/page-01-image-01.jpeg)
+
+**Figure 2. Source image 2**
+
+![Source image 2 from submitted manual](images/page-01-image-02.jpeg)
+
+**Figure 3. Source image 3**
+
+![Source image 3 from submitted manual](images/page-03-image-03.png)
+
+**Figure 4. Source image 4**
+
+![Source image 4 from submitted manual](images/page-05-image-03.png)
+
+**Figure 5. Source image 5**
+
+![Source image 5 from submitted manual](images/page-05-image-04.png)
+
+**Figure 6. Source image 6**
+
+![Source image 6 from submitted manual](images/page-06-image-03.jpeg)
+
+
+
 The architecture diagram shows the layers from the host laptop to the application containers. The browser and terminal reach the VM through VirtualBox NAT port forwarding. UFW protects the Ubuntu VM, and Docker runs the two containers on a private backend network.
 
 ### 2.1 Layers, outside to inside
@@ -598,4 +628,67 @@ Together, these steps demonstrate virtualization, Linux and SSH administration, 
 | `.env.example` | Safe example of required environment variables |
 | `automation-script.sh` | Automated database backup script |
 | `operational-manual.md` | This manual |
-| `images/` | Images extracted from the original PDF for documentation |
+| `images/` | Screenshots and diagrams embedded throughout this manual |
+
+---
+
+## Appendix A. Screenshots from the Original Manual
+
+These images are embedded from the original PDF. GitHub displays them inline when the Markdown file and the `images/` folder are committed together.
+
+### Figure 7. Original manual image
+
+![Figure 7 from the original manual](images/page-07-image-03.jpeg)
+
+### Figure 8. Original manual image
+
+![Figure 8 from the original manual](images/page-07-image-04.jpeg)
+
+### Figure 9. Original manual image
+
+![Figure 9 from the original manual](images/page-08-image-03.jpeg)
+
+### Figure 10. Original manual image
+
+![Figure 10 from the original manual](images/page-09-image-03.jpeg)
+
+### Figure 11. Original manual image
+
+![Figure 11 from the original manual](images/page-11-image-03.jpeg)
+
+### Figure 12. Original manual image
+
+![Figure 12 from the original manual](images/page-11-image-04.jpeg)
+
+### Figure 13. Original manual image
+
+![Figure 13 from the original manual](images/page-11-image-05.png)
+
+### Figure 14. Original manual image
+
+![Figure 14 from the original manual](images/page-12-image-03.jpeg)
+
+### Figure 15. Original manual image
+
+![Figure 15 from the original manual](images/page-13-image-03.jpeg)
+
+### Figure 16. Original manual image
+
+![Figure 16 from the original manual](images/page-13-image-04.png)
+
+### Figure 17. Original manual image
+
+![Figure 17 from the original manual](images/page-14-image-03.jpeg)
+
+### Figure 18. Original manual image
+
+![Figure 18 from the original manual](images/page-15-image-03.png)
+
+### Figure 19. Original manual image
+
+![Figure 19 from the original manual](images/page-15-image-04.png)
+
+### Figure 20. Original manual image
+
+![Figure 20 from the original manual](images/page-16-image-03.jpeg)
+
