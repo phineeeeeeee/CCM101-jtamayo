@@ -411,7 +411,7 @@ Both containers should show running. The database may say healthy after about 30
 3. Enter the site title Cloud Computing Application, an admin username (tamayogroup), a strong password, and your email. Click Install WordPress, then log in.
 4. Create one test post (Posts, Add New, Publish). The test post is titled TAMAYO GROUP and lists the group members.
 
-![WordPress site](screenshots/page-11-image-04.jpeg)
+![WordPress site](screenshots/page-11-image-04.png)
 
 *Figure 10. WordPress site*
 
@@ -460,7 +460,7 @@ Both containers should be running because of restart: unless-stopped. The volume
 
 *Figure 12. Results after reboot*
 
-![Post after reboot](screenshots/page-13-image-03.jpeg)
+![Post after reboot](screenshots/page-13-image-03.png)
 
 *Figure 13. Post after reboot*
 
